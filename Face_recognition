@@ -1,0 +1,209 @@
+#mount google-drive i /content/gdrive
+from google.colab import drive
+drive.mount('/content/gdrive')
+cd "/content/gdrive/My Drive/KareenaSMulla/"
+!pwd
+!pip install face_recognition
+import matplotlib.pyplot as plt
+
+from skimage.feature import hog
+from skimage import data, exposure
+import cv2
+
+#read image from disk    ######################## Modify
+#image = cv2.imread('FRIENDS.jpg')
+#image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+image = cv2.imread('FRIENDS.jpg')
+image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+
+#image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)   #use for multi-channel in hog
+#image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  #use for single channel in hog
+
+#fd is the feature-descriptor(used to represent the image)
+fd, hog_image = hog(image, orientations=8, pixels_per_cell=(16,16),
+                    cells_per_block=(1,1), visualize=True, multichannel=True)
+
+#plot input and hog image
+fig,(ax1, ax2) = plt.subplots(1, 2, figsize=(8,4), sharex=True, sharey=True)
+
+ax1.axis('off')
+ax1.imshow(image, cmap=plt.cm.gray)
+ax1.set_title('Input image')
+
+#Rescale histogram for better display 
+hog_image_rescaled = exposure.rescale_intensity(hog_image, in_range=(0, 10))
+
+ax2.axis('off')
+ax2.imshow(hog_image_rescaled, cmap=plt.cm.gray)
+ax2.set_title('Histogram of Oriented Gradients')
+plt.show()
+
+len(fd)
+
+image.shape
+
+
+import face_recognition
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib.patches import Circle
+import numpy as np
+import cv2 #OpenCV
+%matplotlib inline
+
+#load the jpg file into a numpy array
+#image = face_recognition.load_image_file("TAHIM2.jpg")
+image = cv2.imread('FRIENDS.jpg')
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+plt.imshow(image)
+
+#Find all the faces in the image
+#face_locations = face_recognition.face_locations(image)
+face_locations = face_recognition.face_locations(image)
+
+number_of_faces = len(face_locations)
+print("Found {} face(s) in the input image.".format(number_of_faces))
+
+#get axis handle
+plt.imshow(image)
+ax = plt.gca()
+
+#repeat for all faces found
+for face_location in face_locations:
+
+  #Print the location of each face in this image.Each face is a list of co-ordinates in (top, right, bottom, left) order.
+  top, right, bottom, left = face_location
+  x,y,w,h = left, top, right, bottom
+  print("A face is located at pixel location Top: {}, Left: {}, Bottom: {}, Right: {}".format(x,y,w,h))
+
+  #Let's draw a box around the face
+  rect = Rectangle((x,y), w-x, h-y, fill=False, color='red')
+  ax.add_patch(rect)
+
+#show output image
+plt.show()
+
+import face_recognition
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib.patches import Circle
+import numpy as np
+import cv2
+%matplotlib inline
+
+#load the known images (create a database)
+#SHERLOCK = face_recognition.load_image_file("person_1.jpg")
+image = cv2.imread("SHERLOCK.jpg")
+SHERLOCK = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+#MYCROFT = face_recognition.load_image_file("person2.jpg")
+image = cv2.imread("MYCROFT.jpg")
+MYCROFT = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+#BILLGATES = face_recognition.load_image_file("person3.jpg")
+image = cv2.imread("BILLGATES.jpg")
+BILLGATES = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+SHERLOCK_encoding = face_recognition.face_encodings(SHERLOCK)[0]
+MYCROFT_encoding = face_recognition.face_encodings(MYCROFT)[0]
+BILLGATES_encoding = face_recognition.face_encodings(BILLGATES)[0]
+
+#Create a database of all known face encodings
+known_face_encodings = [
+                        SHERLOCK_encoding,
+                        MYCROFT_encoding,
+                        BILLGATES_encoding
+]
+
+#load the image we want to check
+#unknown_image = face_recognition.load_image_file("unknown.jpg")
+image = cv2.imread('MYCROFT.jpg')
+unknown_image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
+plt.imshow(unknown_image)
+
+#get the face encodings for any people in the picture
+#unknown_face_encodings = face_recognition.face_encodings(unknown_image)
+unknown_face_encodings = face_recognition.face_encodings(unknown_image)
+
+from scipy.spatial import distance
+#there might be more than one person in the photo,so we need to loop over each face we found
+for unknown_face_encoding in unknown_face_encodings:
+  #test if this unknown face matches any of the 3 people we know
+  #results = face_recognition.compare_faces(known_face_encodings,unknown_face_encoding,tolerance = 0.6)
+  #compute euclidean distance
+  results = []
+  for known_face_encoding in known_face_encodings:
+    d = distance.euclidean(known_face_encoding, unknown_face_encoding)
+    #print("Euclidean distance:",d)
+    results.append(d)
+  threshold = 0.6
+  results = np.array(results)<=threshold
+
+  name = "Unknown"
+
+  if results[0]:
+    name = "SHERLOCK image"
+  elif results [1]:
+    name = "MYCROFT image"
+  elif results [2]:
+    name = "BILLGATES image"
+
+  print(f"Found {name} in the photo!")
+
+
+#load the jpg file into a numpy array
+#image = face_recognition.load_image_file("people.jpg")
+
+image = cv2.imread("BILLGATES.jpg")
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+plt.imshow(image)
+
+#find all facial features in all the faces in the image
+#face_landmarks_list = face_recognition.face_landmarks(image)
+
+face_landmarks_list = face_recognition.face_landmarks(image)
+
+import matplotlib.lines as mlines
+from matplotlib.patches import Polygon
+
+plt.imshow (image)
+ax = plt.gca()
+
+for face_landmarks in face_landmarks_list:
+  #the face landmark detection model returns these faetures:
+  #chin,left_eyebrow,right_eyebrow, nose_bridge,nose_tip,left_eye,right_eye,top_lip,bottom_lip.
+  #Draw a line over teh eyebrows
+  left_eyebrow_pts = face_landmarks ['left_eyebrow']
+  pre_x,pre_y = left_eyebrow_pts [0]
+  for(x,y) in left_eyebrow_pts [1:]:
+    #cv2.line (image,(pre_x,pre_y), (x,y), color, thickness)
+    l = mlines.Line2D([pre_x,y],[pre_y,y],color = 'red')
+    ax.add_line(l)
+    pre_x,pre_y = x,y
+
+right_eyebrow_pts = face_landmarks['right_eyebrow']
+pre_x, pre_y = right_eyebrow_pts[0]
+for (x,y) in right_eyebrow_pts[1:]:
+  #cv2.line(image, (pre_x,pre_y),(x,y), color, thickness)
+  l = mlines.Line2D([pre_x,x],[pre_y,y], color = "red")#fill = (128,0,128,100,width = 3)
+  ax.add_line(l)
+  pre_x,pre_y = x,y
+
+p = Polygon (face_landmarks['top_lip'], facecolor = 'lightsalmon',edgecolor = 'orangered')
+ax.add_patch(p)
+p = Polygon(face_landmarks['bottom_lip'],facecolor = 'lightsalmon',edgecolor = 'orangered')
+ax.add_patch(p)
+p = Polygon (face_landmarks['bottom_lip'],facecolor = 'lightsalmon',edgecolor = 'orangered')
+ax.add_patch(p)
+
+###show the final image
+plt.show()
+
+
+
+
+
+
+
